@@ -11,6 +11,7 @@ import LibraryView from './components/views/LibraryView';
 import ScholarshipsView from './components/views/ScholarshipsView';
 import SettingsView from './components/views/SettingsView';
 import DeepWorkView from './components/views/DeepWorkView';
+import BraindumpView from './components/views/BraindumpView';
 
 const containerVars = {
   hidden: { opacity: 0, y: 10 },
@@ -28,13 +29,13 @@ const App = () => {
     setAppData, importData,
     toggleHabit, saveNote, saveMood, addTodo, toggleTodo, deleteTodo, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
     saveBook, deleteBook, updateBookProgress,
-    saveTheme,
+    saveBraindumpNote, deleteBraindumpNote,
     saveScholarship, deleteScholarship,
     last7Days, chartData, neglectedHabits, financialStats
   } = trackerData;
 
   return (
-    <div className={`app-container theme-${appData.theme || 'dark'}`}>
+    <div className="app-container">
       {/* --- SIDEBAR --- */}
       <Sidebar
         activeTab={activeTab}
@@ -128,7 +129,18 @@ const App = () => {
             />
           )}
 
-          {/* 6. SETTINGS */}
+          {/* 6. BRAINDUMP (Boîte à Idées) */}
+          {activeTab === 'braindump' && (
+            <BraindumpView
+              key="braindump"
+              containerVars={containerVars}
+              appData={appData}
+              saveBraindumpNote={saveBraindumpNote}
+              deleteBraindumpNote={deleteBraindumpNote}
+            />
+          )}
+
+          {/* 7. SETTINGS */}
           {activeTab === 'settings' && (
             <SettingsView
               key="settings"
@@ -136,7 +148,6 @@ const App = () => {
               appData={appData}
               setAppData={setAppData}
               importData={importData}
-              saveTheme={saveTheme}
             />
           )}
 

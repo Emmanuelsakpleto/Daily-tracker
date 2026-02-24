@@ -31,7 +31,7 @@ export function useTrackerData() {
         habits: DEFAULT_HABITS,
         scholarships: [],
         books: [],
-        theme: 'dark', // 'light' | 'dark'
+        braindump: [],
         records: {} // { 'YYYY-MM-DD': { habits: ['h1'], todos: [], notes: '', finance: { income: '', expense: '' } } }
     });
 
@@ -144,8 +144,18 @@ export function useTrackerData() {
         }));
     }, [setAppData]);
 
-    const saveTheme = useCallback((theme) => {
-        setAppData(p => ({ ...p, theme }));
+    const saveBraindumpNote = useCallback((text) => {
+        setAppData(p => ({
+            ...p,
+            braindump: [{ id: Date.now().toString(), text, createdAt: new Date().toISOString() }, ...(p.braindump || [])]
+        }));
+    }, [setAppData]);
+
+    const deleteBraindumpNote = useCallback((id) => {
+        setAppData(p => ({
+            ...p,
+            braindump: (p.braindump || []).filter(item => item.id !== id)
+        }));
     }, [setAppData]);
 
     const saveScholarship = useCallback((scholarshipData, isEdit) => {
@@ -223,7 +233,7 @@ export function useTrackerData() {
         appData, setAppData, importData,
         toggleHabit, addTodo, toggleTodo, deleteTodo, saveNote, saveMood, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
         saveBook, deleteBook, updateBookProgress,
-        saveTheme,
+        saveBraindumpNote, deleteBraindumpNote,
         saveScholarship, deleteScholarship,
         last7Days, chartData, neglectedHabits, financialStats
     };

@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Default Dark Theme variables (legacy/fallback) */
   --bg-primary: #050507;
   --bg-secondary: #0c0c10;
   --bg-tertiary: #13131a;
@@ -16,32 +15,6 @@
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
-}
-
-.theme-dark {
-  --bg-primary: #050507;
-  --bg-secondary: #0c0c10;
-  --bg-tertiary: #13131a;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --text-muted: #475569;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --shadow-color: rgba(0, 0, 0, 0.5);
-}
-
-.theme-light {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #f1f5f9;
-  --bg-tertiary: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #64748b;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-bg-hover: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(148, 163, 184, 0.2);
-  --shadow-color: rgba(148, 163, 184, 0.2);
 }
 
 * {
@@ -619,7 +592,6 @@ select:focus {
   padding: 1.5rem;
   border-radius: 16px;
   align-items: flex-start;
-  color: var(--text-primary);
 }
 
 .alert-card h4 {

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     LayoutDashboard, Calendar as CalendarIcon, Award, Settings,
-    BookOpen, CheckSquare
+    BookOpen, CheckSquare, Lightbulb
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, setSelectedDate, today, profile }) => {
@@ -29,6 +29,9 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedDate, today, profile }) =
                 </button>
                 <button className={`nav-item ${activeTab === 'scholarships' ? 'active' : ''}`} onClick={() => setActiveTab('scholarships')}>
                     <Award size={20} /> Projets & Candidatures
+                </button>
+                <button className={`nav-item ${activeTab === 'braindump' ? 'active' : ''}`} onClick={() => setActiveTab('braindump')}>
+                    <Lightbulb size={20} /> Boîte à Idées
                 </button>
                 <button className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
                     <Settings size={20} /> Configuration
