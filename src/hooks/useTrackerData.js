@@ -31,6 +31,7 @@ export function useTrackerData() {
         habits: DEFAULT_HABITS,
         scholarships: [],
         books: [],
+        theme: 'dark', // 'light' | 'dark'
         records: {} // { 'YYYY-MM-DD': { habits: ['h1'], todos: [], notes: '', finance: { income: '', expense: '' } } }
     });
 
@@ -143,6 +144,10 @@ export function useTrackerData() {
         }));
     }, [setAppData]);
 
+    const saveTheme = useCallback((theme) => {
+        setAppData(p => ({ ...p, theme }));
+    }, [setAppData]);
+
     const saveScholarship = useCallback((scholarshipData, isEdit) => {
         setAppData(prev => {
             const newScho = isEdit
@@ -218,6 +223,7 @@ export function useTrackerData() {
         appData, setAppData, importData,
         toggleHabit, addTodo, toggleTodo, deleteTodo, saveNote, saveMood, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
         saveBook, deleteBook, updateBookProgress,
+        saveTheme,
         saveScholarship, deleteScholarship,
         last7Days, chartData, neglectedHabits, financialStats
     };

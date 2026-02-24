@@ -79,6 +79,28 @@ const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, to
                         })}
                     </div>
 
+                    <h3 style={{ marginBottom: '1.5rem', marginTop: '2.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Smile size={20} color="var(--accent-primary)" /> Mon Humeur
+                    </h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                        {[{ v: 1, e: '😫', label: 'Épuisé' }, { v: 2, e: '🙁', label: 'Bof' }, { v: 3, e: '😐', label: 'Moyen' }, { v: 4, e: '🙂', label: 'Bien' }, { v: 5, e: '🤩', label: 'Super' }].map(m => (
+                            <button
+                                key={m.v}
+                                onClick={() => saveMood(selectedDateStr, m.v)}
+                                title={m.label}
+                                style={{
+                                    fontSize: '2rem', background: 'transparent', border: 'none', cursor: 'pointer',
+                                    opacity: currentRecord.mood === m.v ? 1 : 0.4,
+                                    transform: currentRecord.mood === m.v ? 'scale(1.2)' : 'scale(1)',
+                                    transition: 'all 0.2s',
+                                    filter: currentRecord.mood === m.v ? 'drop-shadow(0px 0px 8px rgba(99,102,241,0.5))' : 'none'
+                                }}
+                            >
+                                {m.e}
+                            </button>
+                        ))}
+                    </div>
+
                     <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2rem', marginBottom: '1rem' }}>
                         <FileText size={20} color="var(--accent-secondary)" /> Notes / Réflexions du Jour
                     </h3>
@@ -91,26 +113,6 @@ const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, to
                 </div>
 
                 <div className="glass-card">
-                    <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Smile size={20} color="var(--accent-primary)" /> Mon Humeur
-                    </h3>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', marginBottom: '2rem' }}>
-                        {[{ v: 1, e: '😫' }, { v: 2, e: '🙁' }, { v: 3, e: '😐' }, { v: 4, e: '🙂' }, { v: 5, e: '🤩' }].map(m => (
-                            <button
-                                key={m.v}
-                                onClick={() => saveMood(selectedDateStr, m.v)}
-                                style={{
-                                    fontSize: '2rem', background: 'transparent', border: 'none', cursor: 'pointer',
-                                    opacity: currentRecord.mood === m.v ? 1 : 0.4,
-                                    transform: currentRecord.mood === m.v ? 'scale(1.2)' : 'scale(1)',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                {m.e}
-                            </button>
-                        ))}
-                    </div>
-
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                         <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                             <ListTodo size={20} color="var(--warning)" /> Tâches Spécifiques

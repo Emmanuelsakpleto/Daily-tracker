@@ -28,12 +28,13 @@ const App = () => {
     setAppData, importData,
     toggleHabit, saveNote, saveMood, addTodo, toggleTodo, deleteTodo, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
     saveBook, deleteBook, updateBookProgress,
+    saveTheme,
     saveScholarship, deleteScholarship,
     last7Days, chartData, neglectedHabits, financialStats
   } = trackerData;
 
   return (
-    <div className="app-container">
+    <div className={`app-container theme-${appData.theme || 'dark'}`}>
       {/* --- SIDEBAR --- */}
       <Sidebar
         activeTab={activeTab}
@@ -135,6 +136,7 @@ const App = () => {
               appData={appData}
               setAppData={setAppData}
               importData={importData}
+              saveTheme={saveTheme}
             />
           )}
 
