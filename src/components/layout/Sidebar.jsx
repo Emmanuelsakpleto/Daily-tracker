@@ -11,7 +11,7 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedDate, today, profile }) =
                 <div className="logo-pulse"></div>
                 <h2 className="gradient-text">Tracker {profile.year}</h2>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div className="side-nav-links">
                 <button className={`nav-item ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
                     <CalendarIcon size={20} /> Mon Calendrier
                 </button>
@@ -37,7 +37,7 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedDate, today, profile }) =
                     <Settings size={20} /> Configuration
                 </button>
             </div>
-            <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
+            <div className="nav-footer-profile" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
                 <p style={{ fontWeight: 600 }}>{profile.name}</p>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Dynamique & Persistant</p>
             </div>
