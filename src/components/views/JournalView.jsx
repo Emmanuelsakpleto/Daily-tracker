@@ -2,11 +2,45 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format, subDays, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Zap, CheckCircle2, FileText, ListTodo, Plus, Trash2, Coins, TrendingUp, TrendingDown, Smile } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, CheckCircle2, FileText, ListTodo, Plus, Trash2, Coins, TrendingUp, TrendingDown, Smile, CalendarPlus } from 'lucide-react';
 
 const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, today, toggleHabit, saveNote, addTodo, toggleTodo, deleteTodo, saveFinance, saveMood, addCategorizedExpense, deleteCategorizedExpense }) => {
     const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
     const currentRecord = appData.records[selectedDateStr] || { habits: [], todos: [], notes: '', finance: { income: '', expense: '' } };
+
+    const handleDownloadICS = () => {
+        if (!currentRecord.todos || currentRecord.todos.length === 0) {
+            alert("Aucune tâche à exporter pour cette date.");
+            return;
+        }
+
+        const dateStr = format(selectedDate, 'yyyyMMdd');
+        const nextDayStr = format(subDays(selectedDate, -1), 'yyyyMMdd');
+
+        let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Tracker//FR\n";
+
+        currentRecord.todos.forEach((todo, idx) => {
+            const uid = `${Date.now()}-${idx}@tracker`;
+            icsContent += "BEGIN:VEVENT\n";
+            icsContent += `UID:${uid}\n`;
+            icsContent += `DTSTAMP:${dateStr}T000000Z\n`;
+            icsContent += `DTSTART;VALUE=DATE:${dateStr}\n`;
+            icsContent += `DTEND;VALUE=DATE:${nextDayStr}\n`;
+            icsContent += `SUMMARY:${todo.text}\n`;
+            icsContent += "END:VEVENT\n";
+        });
+
+        icsContent += "END:VCALENDAR";
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `taches_${dateStr}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <motion.div variants={containerVars} initial="hidden" animate="visible" exit="hidden">
@@ -77,9 +111,14 @@ const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, to
                         ))}
                     </div>
 
-                    <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <ListTodo size={20} color="var(--warning)" /> Tâches Spécifiques ({selectedDateStr})
-                    </h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                            <ListTodo size={20} color="var(--warning)" /> Tâches Spécifiques
+                        </h3>
+                        <button onClick={handleDownloadICS} className="btn-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)', padding: '0.5rem', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }} title="Exporter vers Google Agenda (ICS)">
+                            <CalendarPlus size={16} /> Exporter Agenda
+                        </button>
+                    </div>
 
                     <form onSubmit={(e) => { e.preventDefault(); addTodo(selectedDateStr, e.target.todo.value); e.target.reset(); }} className="task-input-group">
                         <input type="text" name="todo" placeholder="Ajouter une tâche..." autoComplete="off" />
