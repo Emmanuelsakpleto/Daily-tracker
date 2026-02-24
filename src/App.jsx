@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { startOfToday } from 'date-fns';
+import { AnimatePresence } from 'framer-motion';
+import { supabase } from './utils/supabase';
 import { AnimatePresence } from 'framer-motion';
 
 import { useTrackerData } from './hooks/useTrackerData';
@@ -12,6 +14,7 @@ import ScholarshipsView from './components/views/ScholarshipsView';
 import SettingsView from './components/views/SettingsView';
 import DeepWorkView from './components/views/DeepWorkView';
 import BraindumpView from './components/views/BraindumpView';
+import AuthView from './components/views/AuthView';
 
 const containerVars = {
   hidden: { opacity: 0, y: 10 },
@@ -19,9 +22,24 @@ const containerVars = {
 };
 
 const App = () => {
+  const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState('journal');
   const today = startOfToday();
   const [selectedDate, setSelectedDate] = useState(today);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const trackerData = useTrackerData();
   const {
@@ -33,6 +51,10 @@ const App = () => {
     saveScholarship, deleteScholarship,
     last7Days, chartData, neglectedHabits, financialStats
   } = trackerData;
+
+  if (!session) {
+    return <AuthView session={session} setSession={setSession} />;
+  }
 
   return (
     <div className="app-container">
