@@ -2,9 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format, subDays, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Zap, CheckCircle2, FileText, ListTodo, Plus, Trash2, Coins, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, CheckCircle2, FileText, ListTodo, Plus, Trash2, Coins, TrendingUp, TrendingDown, Smile } from 'lucide-react';
 
-const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, today, toggleHabit, saveNote, addTodo, toggleTodo, deleteTodo, saveFinance }) => {
+const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, today, toggleHabit, saveNote, addTodo, toggleTodo, deleteTodo, saveFinance, saveMood, addCategorizedExpense, deleteCategorizedExpense }) => {
     const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
     const currentRecord = appData.records[selectedDateStr] || { habits: [], todos: [], notes: '', finance: { income: '', expense: '' } };
 
@@ -58,6 +58,26 @@ const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, to
 
                 <div className="glass-card">
                     <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Smile size={20} color="var(--accent-primary)" /> Mon Humeur
+                    </h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', marginBottom: '2rem' }}>
+                        {[{ v: 1, e: '😫' }, { v: 2, e: '🙁' }, { v: 3, e: '😐' }, { v: 4, e: '🙂' }, { v: 5, e: '🤩' }].map(m => (
+                            <button
+                                key={m.v}
+                                onClick={() => saveMood(selectedDateStr, m.v)}
+                                style={{
+                                    fontSize: '2rem', background: 'transparent', border: 'none', cursor: 'pointer',
+                                    opacity: currentRecord.mood === m.v ? 1 : 0.4,
+                                    transform: currentRecord.mood === m.v ? 'scale(1.2)' : 'scale(1)',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {m.e}
+                            </button>
+                        ))}
+                    </div>
+
+                    <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <ListTodo size={20} color="var(--warning)" /> Tâches Spécifiques ({selectedDateStr})
                     </h3>
 
@@ -98,14 +118,40 @@ const JournalView = ({ containerVars, appData, selectedDate, setSelectedDate, to
                                 <TrendingDown size={16} color="var(--danger)" style={{ position: 'absolute', right: '15px', bottom: '15px' }} />
                             </div>
                         </div>
-                        <div style={{ padding: '1rem', marginTop: '0.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Bilan Journalier</span>
-                            <span style={{ fontWeight: 700, fontSize: '1.2rem', color: ((currentRecord.finance?.income || 0) - (currentRecord.finance?.expense || 0)) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                                {((currentRecord.finance?.income || 0) - (currentRecord.finance?.expense || 0))} MAD
-                            </span>
-                        </div>
                     </div>
 
+                    {/* Expense Categories */}
+                    <form onSubmit={(e) => { e.preventDefault(); addCategorizedExpense(selectedDateStr, e.target.amount.value, e.target.category.value); e.target.reset(); }} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                        <select name="category" style={{ width: '40%' }}>
+                            <option value="Nourriture">🍽️ Nourriture</option>
+                            <option value="Transport">🚕 Transport</option>
+                            <option value="Divertissement">🎮 Divertissement</option>
+                            <option value="Achats">🛍️ Achats</option>
+                            <option value="Projets">🚀 Projets</option>
+                            <option value="Autre">✨ Autre</option>
+                        </select>
+                        <input type="number" name="amount" placeholder="Dépense ciblée..." required style={{ width: '40%' }} />
+                        <button type="submit" className="btn-primary" style={{ padding: '0 1rem' }}>Ajouter</button>
+                    </form>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                        {(currentRecord.finance?.expensesList || []).map(ex => (
+                            <div key={ex.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '8px', fontSize: '0.9rem' }}>
+                                <span>{ex.category}</span>
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <span style={{ color: 'var(--danger)', fontWeight: 600 }}>-{ex.amount} MAD</span>
+                                    <button className="btn-icon" onClick={() => deleteCategorizedExpense(selectedDateStr, ex.id)} style={{ width: '24px', height: '24px', minWidth: '24px' }}><Trash2 size={12} /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ padding: '1rem', marginTop: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Bilan Journalier</span>
+                        <span style={{ fontWeight: 700, fontSize: '1.2rem', color: ((currentRecord.finance?.income || 0) - (Number(currentRecord.finance?.expense || 0) + (currentRecord.finance?.expensesList || []).reduce((acc, curr) => acc + curr.amount, 0))) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                            {((currentRecord.finance?.income || 0) - (Number(currentRecord.finance?.expense || 0) + (currentRecord.finance?.expensesList || []).reduce((acc, curr) => acc + curr.amount, 0)))} MAD
+                        </span>
+                    </div>
                 </div>
             </div>
         </motion.div>

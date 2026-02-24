@@ -36,7 +36,7 @@ export function useTrackerData() {
 
     const updateRecord = useCallback((dateStr, updates) => {
         setAppData(prev => {
-            const rec = prev.records[dateStr] || { habits: [], todos: [], notes: '', finance: { income: '', expense: '' } };
+            const rec = prev.records[dateStr] || { habits: [], todos: [], notes: '', mood: null, deepWorkMinutes: 0, finance: { income: '', expense: '', expensesList: [] } };
             return {
                 ...prev,
                 records: {
@@ -45,6 +45,19 @@ export function useTrackerData() {
                 }
             };
         });
+    }, [setAppData]);
+
+    const importData = useCallback((jsonData) => {
+        try {
+            const parsed = JSON.parse(jsonData);
+            if (parsed.profile && parsed.habits) {
+                setAppData(parsed);
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        }
     }, [setAppData]);
 
     const toggleHabit = useCallback((dateStr, habitId) => {
@@ -75,10 +88,42 @@ export function useTrackerData() {
         updateRecord(dateStr, { notes });
     }, [updateRecord]);
 
+    const saveMood = useCallback((dateStr, mood) => {
+        updateRecord(dateStr, { mood });
+    }, [updateRecord]);
+
+    const saveDeepWork = useCallback((dateStr, minutes) => {
+        setAppData(prev => {
+            const rec = prev.records[dateStr] || { habits: [], todos: [], notes: '', mood: null, deepWorkMinutes: 0, finance: { income: '', expense: '', expensesList: [] } };
+            const currentTotal = rec.deepWorkMinutes || 0;
+            return {
+                ...prev,
+                records: {
+                    ...prev.records,
+                    [dateStr]: { ...rec, deepWorkMinutes: currentTotal + minutes }
+                }
+            };
+        });
+    }, [setAppData]);
+
     const saveFinance = useCallback((dateStr, type, value) => {
-        const currentRecord = appData.records[dateStr] || { habits: [], todos: [], notes: '', finance: { income: '', expense: '' } };
+        const currentRecord = appData.records[dateStr] || { habits: [], todos: [], notes: '', mood: null, deepWorkMinutes: 0, finance: { income: '', expense: '', expensesList: [] } };
         const numValue = value === '' ? '' : Number(value);
-        updateRecord(dateStr, { finance: { ...(currentRecord.finance || { income: '', expense: '' }), [type]: numValue } });
+        updateRecord(dateStr, { finance: { ...(currentRecord.finance || { income: '', expense: '', expensesList: [] }), [type]: numValue } });
+    }, [appData, updateRecord]);
+
+    const addCategorizedExpense = useCallback((dateStr, amount, category) => {
+        const currentRecord = appData.records[dateStr] || { habits: [], todos: [], notes: '', mood: null, deepWorkMinutes: 0, finance: { income: '', expense: '', expensesList: [] } };
+        const fin = currentRecord.finance || { income: '', expense: '', expensesList: [] };
+        const list = fin.expensesList || [];
+        updateRecord(dateStr, { finance: { ...fin, expensesList: [...list, { id: Date.now(), amount: Number(amount), category }] } });
+    }, [appData, updateRecord]);
+
+    const deleteCategorizedExpense = useCallback((dateStr, id) => {
+        const currentRecord = appData.records[dateStr] || { habits: [], todos: [], notes: '', mood: null, deepWorkMinutes: 0, finance: { income: '', expense: '', expensesList: [] } };
+        const fin = currentRecord.finance || { income: '', expense: '', expensesList: [] };
+        const list = fin.expensesList || [];
+        updateRecord(dateStr, { finance: { ...fin, expensesList: list.filter(e => e.id !== id) } });
     }, [appData, updateRecord]);
 
     const saveBook = useCallback((bookData, isEdit) => {
@@ -119,7 +164,8 @@ export function useTrackerData() {
             const nbH = rec ? Math.min(rec.habits.length, appData.habits.length) : 0;
             return {
                 name: format(d, 'EEE', { locale: fr }),
-                score: appData.habits.length > 0 ? Math.round((nbH / appData.habits.length) * 100) : 0
+                score: appData.habits.length > 0 ? Math.round((nbH / appData.habits.length) * 100) : 0,
+                deepWork: rec?.deepWorkMinutes || 0
             };
         });
     }, [appData.records, appData.habits, last7Days]);
@@ -136,18 +182,41 @@ export function useTrackerData() {
 
     const financialStats = useMemo(() => {
         let income = 0; let expense = 0;
+        let totalDeepWork = 0;
+        const expensesByCategory = {};
+
         Object.values(appData.records).forEach(rec => {
+            totalDeepWork += (rec.deepWorkMinutes || 0);
             if (rec.finance) {
                 if (rec.finance.income) income += Number(rec.finance.income);
-                if (rec.finance.expense) expense += Number(rec.finance.expense);
+
+                // If legacy flat expense field
+                if (rec.finance.expense) {
+                    expense += Number(rec.finance.expense);
+                }
+
+                // Add up categorized expenses
+                if (rec.finance.expensesList) {
+                    rec.finance.expensesList.forEach(ex => {
+                        expense += Number(ex.amount);
+                        expensesByCategory[ex.category] = (expensesByCategory[ex.category] || 0) + Number(ex.amount);
+                    });
+                }
             }
         });
-        return { income, expense, net: income - expense };
+
+        // Prepare pie chart data
+        const pieData = Object.keys(expensesByCategory).map(key => ({
+            name: key,
+            value: expensesByCategory[key]
+        })).filter(item => item.value > 0);
+
+        return { income, expense, net: income - expense, totalDeepWork, expensesByCategory: pieData };
     }, [appData.records]);
 
     return {
-        appData, setAppData,
-        toggleHabit, addTodo, toggleTodo, deleteTodo, saveNote, saveFinance,
+        appData, setAppData, importData,
+        toggleHabit, addTodo, toggleTodo, deleteTodo, saveNote, saveMood, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
         saveBook, deleteBook, updateBookProgress,
         saveScholarship, deleteScholarship,
         last7Days, chartData, neglectedHabits, financialStats

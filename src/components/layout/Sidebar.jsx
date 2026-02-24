@@ -21,6 +21,9 @@ const Sidebar = ({ activeTab, setActiveTab, setSelectedDate, today, profile }) =
                 <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
                     <LayoutDashboard size={20} /> Progression & Stats
                 </button>
+                <button className={`nav-item ${activeTab === 'deepwork' ? 'active' : ''}`} onClick={() => setActiveTab('deepwork')}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> Deep Work
+                </button>
                 <button className={`nav-item ${activeTab === 'books' ? 'active' : ''}`} onClick={() => setActiveTab('books')}>
                     <BookOpen size={20} /> Bibliothèque
                 </button>

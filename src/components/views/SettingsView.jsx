@@ -1,9 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Zap, RefreshCw, Download } from 'lucide-react';
+import { Zap, RefreshCw, Download, Upload } from 'lucide-react';
 import { DEFAULT_HABITS, DEFAULT_PROFILE } from '../../utils/constants';
 
-const SettingsView = ({ containerVars, appData, setAppData }) => {
+const SettingsView = ({ containerVars, appData, setAppData, importData }) => {
+    const handleImport = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const success = importData(event.target.result);
+            if (success) {
+                alert('Données importées avec succès !');
+                window.location.reload();
+            } else {
+                alert('Erreur lors de l\'importation. Le fichier est invalide.');
+            }
+        };
+        reader.readAsText(file);
+    };
     return (
         <motion.div variants={containerVars} initial="hidden" animate="visible" exit="hidden">
             <div className="header-glass"><div><h2 className="section-title">Configuration Initiale</h2><p className="section-subtitle">Sécurité et paramètres</p></div></div>
@@ -17,6 +32,11 @@ const SettingsView = ({ containerVars, appData, setAppData }) => {
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a'); a.href = url; a.download = `tracker_${appData.profile.year}_sauvegarde.json`; a.click();
                         }}><Download size={18} /> Exporter Data</button>
+
+                        <label className="btn-primary" style={{ cursor: 'pointer', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)' }}>
+                            <Upload size={18} /> Importer Data
+                            <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+                        </label>
                     </div>
                 </div>
 

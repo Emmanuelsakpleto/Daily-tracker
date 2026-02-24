@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Target, CheckCircle2, AlertCircle, BookOpen, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Target, CheckCircle2, AlertCircle, BookOpen, TrendingUp, TrendingDown, DollarSign, Brain, PieChart as PieChartIcon } from 'lucide-react';
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 const DashboardView = ({ containerVars, appData, today, neglectedHabits, financialStats, chartData }) => {
     return (
@@ -19,13 +21,14 @@ const DashboardView = ({ containerVars, appData, today, neglectedHabits, financi
                 <div className="glass-card stat-card"><div className="stat-icon stat-bg-amber"><BookOpen size={24} /></div><div><h4 style={{ color: 'var(--text-secondary)' }}>Livres</h4><p className="stat-value">{appData.books.filter(b => b.readPages >= b.totalPages).length} / {appData.books.length}</p></div></div>
             </div>
 
-            <div className="grid-cols-3" style={{ marginBottom: '2rem' }}>
+            <div className="grid-cols-4" style={{ marginBottom: '2rem' }}>
                 <div className="glass-card stat-card"><div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)' }}><TrendingUp size={24} /></div><div><h4 style={{ color: 'var(--text-secondary)' }}>Revenus Globaux</h4><p className="stat-value">{financialStats.income} MAD</p></div></div>
                 <div className="glass-card stat-card"><div className="stat-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}><TrendingDown size={24} /></div><div><h4 style={{ color: 'var(--text-secondary)' }}>Dépenses Globales</h4><p className="stat-value">{financialStats.expense} MAD</p></div></div>
                 <div className="glass-card stat-card" style={{ padding: '1rem', borderColor: financialStats.net >= 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)' }}><div className="stat-icon" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}><DollarSign size={24} /></div><div><h4 style={{ color: 'var(--text-secondary)' }}>Balance Nette</h4><p className="stat-value" style={{ color: financialStats.net >= 0 ? 'var(--success)' : 'var(--danger)' }}>{financialStats.net} MAD</p></div></div>
+                <div className="glass-card stat-card"><div className="stat-icon" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}><Brain size={24} /></div><div><h4 style={{ color: 'var(--text-secondary)' }}>Deep Work Total</h4><p className="stat-value">{financialStats.totalDeepWork || 0} min</p></div></div>
             </div>
 
-            <div className="grid-cols-3">
+            <div className="grid-cols-3" style={{ marginBottom: '2rem' }}>
                 <div className="glass-card" style={{ gridColumn: 'span 2' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>Constance sur 7 Jours (%)</h3>
                     <div style={{ width: '100%', height: '300px' }}>
@@ -59,6 +62,28 @@ const DashboardView = ({ containerVars, appData, today, neglectedHabits, financi
                         ))}
                     </div>
                 </div>
+            </div>
+
+            <div className="glass-card" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', alignSelf: 'flex-start' }}>
+                    <PieChartIcon size={20} color="var(--accent-secondary)" /> Répartition des Dépenses
+                </h3>
+                {financialStats.expensesByCategory && financialStats.expensesByCategory.length > 0 ? (
+                    <div style={{ width: '100%', height: '300px' }}>
+                        <ResponsiveContainer>
+                            <PieChart>
+                                <Pie data={financialStats.expensesByCategory} cx="50%" cy="50%" innerRadius={80} outerRadius={110} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                    {financialStats.expensesByCategory.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ background: 'var(--bg-tertiary)', borderColor: 'var(--glass-border)', borderRadius: '12px' }} itemStyle={{ color: 'white' }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '3rem 0' }}>Aucune dépense catégorisée pour le moment.</p>
+                )}
             </div>
         </motion.div>
     );

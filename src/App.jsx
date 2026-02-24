@@ -10,6 +10,7 @@ import DashboardView from './components/views/DashboardView';
 import LibraryView from './components/views/LibraryView';
 import ScholarshipsView from './components/views/ScholarshipsView';
 import SettingsView from './components/views/SettingsView';
+import DeepWorkView from './components/views/DeepWorkView';
 
 const containerVars = {
   hidden: { opacity: 0, y: 10 },
@@ -24,8 +25,8 @@ const App = () => {
   const trackerData = useTrackerData();
   const {
     appData,
-    setAppData,
-    toggleHabit, saveNote, addTodo, toggleTodo, deleteTodo, saveFinance,
+    setAppData, importData,
+    toggleHabit, saveNote, saveMood, addTodo, toggleTodo, deleteTodo, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
     saveBook, deleteBook, updateBookProgress,
     saveScholarship, deleteScholarship,
     last7Days, chartData, neglectedHabits, financialStats
@@ -74,10 +75,23 @@ const App = () => {
               toggleTodo={toggleTodo}
               deleteTodo={deleteTodo}
               saveFinance={saveFinance}
+              saveMood={saveMood}
+              addCategorizedExpense={addCategorizedExpense}
+              deleteCategorizedExpense={deleteCategorizedExpense}
             />
           )}
 
-          {/* 3. DASHBOARD */}
+          {/* 3. DEEP WORK */}
+          {activeTab === 'deepwork' && (
+            <DeepWorkView
+              key="deepwork"
+              containerVars={containerVars}
+              saveDeepWork={saveDeepWork}
+              today={today}
+            />
+          )}
+
+          {/* 4. DASHBOARD */}
           {activeTab === 'dashboard' && (
             <DashboardView
               key="dashboard"
@@ -120,6 +134,7 @@ const App = () => {
               containerVars={containerVars}
               appData={appData}
               setAppData={setAppData}
+              importData={importData}
             />
           )}
 
