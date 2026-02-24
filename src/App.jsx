@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { startOfToday } from 'date-fns';
 import { AnimatePresence } from 'framer-motion';
 import { supabase } from './utils/supabase';
-import { AnimatePresence } from 'framer-motion';
-
 import { useTrackerData } from './hooks/useTrackerData';
 import Sidebar from './components/layout/Sidebar';
 import CalendarView from './components/views/CalendarView';
