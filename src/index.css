@@ -37,7 +37,7 @@
   --bg-tertiary: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-bg-hover: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(148, 163, 184, 0.2);
@@ -619,6 +619,7 @@ select:focus {
   padding: 1.5rem;
   border-radius: 16px;
   align-items: flex-start;
+  color: var(--text-primary);
 }
 
 .alert-card h4 {

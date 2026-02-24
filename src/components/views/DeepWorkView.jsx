@@ -69,7 +69,7 @@ const DeepWorkView = ({ containerVars, saveDeepWork, today }) => {
                             {mode === 'focus' ? '🔥 Focus (25 min)' : '☕ Pause (5 min)'}
                         </h3>
 
-                        <div style={{ fontSize: '5rem', fontWeight: 800, fontFamily: 'monospace', margin: '2rem 0', color: 'white', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
+                        <div style={{ fontSize: '5rem', fontWeight: 800, fontFamily: 'monospace', margin: '2rem 0', color: 'var(--text-primary)', textShadow: '0 0 20px rgba(99,102,241,0.2)' }}>
                             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                         </div>
 
