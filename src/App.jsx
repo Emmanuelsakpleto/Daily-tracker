@@ -39,9 +39,9 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const trackerData = useTrackerData();
+  const trackerData = useTrackerData(session);
   const {
-    appData,
+    appData, isLoaded,
     setAppData, importData,
     toggleHabit, saveNote, saveMood, addTodo, toggleTodo, deleteTodo, saveFinance, addCategorizedExpense, deleteCategorizedExpense, saveDeepWork,
     saveBook, deleteBook, updateBookProgress,
@@ -52,6 +52,15 @@ const App = () => {
 
   if (!session) {
     return <AuthView session={session} setSession={setSession} />;
+  }
+
+  if (!isLoaded) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '1rem' }}>
+        <div className="logo-pulse" style={{ width: '40px', height: '40px' }}></div>
+        <p className="gradient-text" style={{ fontSize: '1.2rem', fontWeight: 600 }}>Synchronisation avec le Cloud...</p>
+      </div>
+    );
   }
 
   return (
