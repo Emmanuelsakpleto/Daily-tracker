@@ -84,17 +84,20 @@ export function useTrackerData(session) {
     const updateRecordLocal = useCallback((dateStr, updates) => {
         setAppData(prev => {
             const rec = prev.records[dateStr] || { habits: [], todos: [], notes: '', mood: null, deepWorkMinutes: 0, finance: { income: '', expense: '', expensesList: [] } };
-            return { ...prev, records: { ...prev.records, [dateStr]: { ...rec, ...updates } } };
+            const resolvedUpdates = typeof updates === 'function' ? updates(rec) : updates;
+            return { ...prev, records: { ...prev.records, [dateStr]: { ...rec, ...resolvedUpdates } } };
         });
     }, []);
 
     // Outil interne : Garantit l'existence du jour sur Supabase avant d'insérer des relations (todos, achats, etc)
     const _ensureRecordId = async (dateStr) => {
         if (appData.records[dateStr]?.id) return appData.records[dateStr].id;
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('daily_records')
             .upsert({ user_id: session?.user?.id, date: dateStr }, { onConflict: 'user_id, date' })
             .select('id').single();
+
+        if (error) console.error('Database Sync Error (upsert):', error);
 
         if (data) {
             updateRecordLocal(dateStr, { id: data.id });
@@ -104,94 +107,116 @@ export function useTrackerData(session) {
     };
 
     const toggleHabit = useCallback(async (dateStr, habitId) => {
-        const currentRecord = appData.records[dateStr] || { habits: [] };
-        const hasHabit = currentRecord.habits.includes(habitId);
-        const newHabits = hasHabit ? currentRecord.habits.filter(h => h !== habitId) : [...currentRecord.habits, habitId];
-
-        // 1. Frontend Save Instantané
-        updateRecordLocal(dateStr, { habits: newHabits });
+        let hasHabit = false;
+        // 1. Frontend Save Instantané (sans closure bug)
+        updateRecordLocal(dateStr, (rec) => {
+            hasHabit = rec.habits.includes(habitId);
+            const newHabits = hasHabit ? rec.habits.filter(h => h !== habitId) : [...rec.habits, habitId];
+            return { habits: newHabits };
+        });
 
         // 2. Cloud Sync Invisible
         const recId = await _ensureRecordId(dateStr);
         if (!recId) return;
 
-        if (hasHabit) await supabase.from('habit_completions').delete().match({ record_id: recId, habit_id: habitId });
-        else await supabase.from('habit_completions').insert({ record_id: recId, habit_id: habitId });
-    }, [appData, updateRecordLocal, session]);
+        if (hasHabit) {
+            const { error } = await supabase.from('habit_completions').delete().match({ record_id: recId, habit_id: habitId });
+            if (error) console.error("Del habit error:", error);
+        } else {
+            const { error } = await supabase.from('habit_completions').insert({ record_id: recId, habit_id: habitId });
+            if (error) console.error("Ins habit error:", error);
+        }
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const addTodo = useCallback(async (dateStr, text) => {
         if (!text) return;
-        const currentRecord = appData.records[dateStr] || { todos: [] };
         const newTodo = { id: generateId(), text, done: false };
-        updateRecordLocal(dateStr, { todos: [...currentRecord.todos, newTodo] });
+        updateRecordLocal(dateStr, (rec) => ({ todos: [...rec.todos, newTodo] }));
 
         const recId = await _ensureRecordId(dateStr);
-        if (recId) await supabase.from('todos').insert({ id: newTodo.id, record_id: recId, text, done: false });
-    }, [appData, updateRecordLocal, session]);
+        if (recId) {
+            const { error } = await supabase.from('todos').insert({ id: newTodo.id, record_id: recId, text, done: false });
+            if (error) console.error("Add todo err:", error);
+        }
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const toggleTodo = useCallback(async (dateStr, todoId) => {
-        const currentRecord = appData.records[dateStr] || { todos: [] };
-        const todo = currentRecord.todos.find(t => t.id === todoId);
-        if (!todo) return;
-        updateRecordLocal(dateStr, { todos: currentRecord.todos.map(t => t.id === todoId ? { ...t, done: !t.done } : t) });
-        await supabase.from('todos').update({ done: !todo.done }).eq('id', todoId);
-    }, [appData, updateRecordLocal]);
+        let todoWasDone = false;
+        let found = false;
+        updateRecordLocal(dateStr, (rec) => {
+            const todo = rec.todos.find(t => t.id === todoId);
+            if (!todo) return {};
+            found = true;
+            todoWasDone = todo.done;
+            return { todos: rec.todos.map(t => t.id === todoId ? { ...t, done: !t.done } : t) };
+        });
+
+        if (found) {
+            const { error } = await supabase.from('todos').update({ done: !todoWasDone }).eq('id', todoId);
+            if (error) console.error("Toggle todo err:", error);
+        }
+    }, [updateRecordLocal]);
 
     const deleteTodo = useCallback(async (dateStr, todoId) => {
-        const currentRecord = appData.records[dateStr] || { todos: [] };
-        updateRecordLocal(dateStr, { todos: currentRecord.todos.filter(t => t.id !== todoId) });
-        await supabase.from('todos').delete().eq('id', todoId);
-    }, [appData, updateRecordLocal]);
+        updateRecordLocal(dateStr, (rec) => ({ todos: rec.todos.filter(t => t.id !== todoId) }));
+        const { error } = await supabase.from('todos').delete().eq('id', todoId);
+        if (error) console.error("Delete todo err:", error);
+    }, [updateRecordLocal]);
 
     const saveNote = useCallback(async (dateStr, notes) => {
         updateRecordLocal(dateStr, { notes });
         const recId = await _ensureRecordId(dateStr);
         if (recId) await supabase.from('daily_records').update({ notes }).eq('id', recId);
-    }, [updateRecordLocal, session]);
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const saveMood = useCallback(async (dateStr, mood) => {
         updateRecordLocal(dateStr, { mood });
         const recId = await _ensureRecordId(dateStr);
         if (recId) await supabase.from('daily_records').update({ mood }).eq('id', recId);
-    }, [updateRecordLocal, session]);
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const saveDeepWork = useCallback(async (dateStr, minutes) => {
-        const rec = appData.records[dateStr] || { deepWorkMinutes: 0 };
-        const newVal = (rec.deepWorkMinutes || 0) + minutes;
-        updateRecordLocal(dateStr, { deepWorkMinutes: newVal });
+        let newVal = 0;
+        updateRecordLocal(dateStr, (rec) => {
+            newVal = (rec.deepWorkMinutes || 0) + minutes;
+            return { deepWorkMinutes: newVal };
+        });
         const recId = await _ensureRecordId(dateStr);
         if (recId) await supabase.from('daily_records').update({ deep_work_minutes: newVal }).eq('id', recId);
-    }, [appData, updateRecordLocal, session]);
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const saveFinance = useCallback(async (dateStr, type, value) => {
-        const currentRecord = appData.records[dateStr] || { finance: { income: '', expense: '', expensesList: [] } };
         const numValue = value === '' ? null : Number(value);
-        updateRecordLocal(dateStr, { finance: { ...(currentRecord.finance || { income: '', expense: '', expensesList: [] }), [type]: numValue || '' } });
+        updateRecordLocal(dateStr, (rec) => {
+            return { finance: { ...(rec.finance || { income: '', expense: '', expensesList: [] }), [type]: numValue || '' } };
+        });
 
         const recId = await _ensureRecordId(dateStr);
         if (recId) {
             const field = type === 'income' ? 'finance_income' : 'finance_expense';
             await supabase.from('daily_records').update({ [field]: numValue }).eq('id', recId);
         }
-    }, [appData, updateRecordLocal, session]);
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const addCategorizedExpense = useCallback(async (dateStr, amount, category) => {
-        const currentRecord = appData.records[dateStr] || { finance: { income: '', expense: '', expensesList: [] } };
-        const fin = currentRecord.finance || { income: '', expense: '', expensesList: [] };
         const newExpense = { id: generateId(), amount: Number(amount), category };
 
-        updateRecordLocal(dateStr, { finance: { ...fin, expensesList: [...(fin.expensesList || []), newExpense] } });
+        updateRecordLocal(dateStr, (rec) => {
+            const fin = rec.finance || { income: '', expense: '', expensesList: [] };
+            return { finance: { ...fin, expensesList: [...(fin.expensesList || []), newExpense] } };
+        });
 
         const recId = await _ensureRecordId(dateStr);
         if (recId) await supabase.from('expenses').insert({ id: newExpense.id, record_id: recId, amount: newExpense.amount, category });
-    }, [appData, updateRecordLocal, session]);
+    }, [updateRecordLocal, session, _ensureRecordId]);
 
     const deleteCategorizedExpense = useCallback(async (dateStr, id) => {
-        const currentRecord = appData.records[dateStr] || { finance: { income: '', expense: '', expensesList: [] } };
-        const fin = currentRecord.finance || { income: '', expense: '', expensesList: [] };
-        updateRecordLocal(dateStr, { finance: { ...fin, expensesList: (fin.expensesList || []).filter(e => e.id !== id) } });
+        updateRecordLocal(dateStr, (rec) => {
+            const fin = rec.finance || { income: '', expense: '', expensesList: [] };
+            return { finance: { ...fin, expensesList: (fin.expensesList || []).filter(e => e.id !== id) } };
+        });
         await supabase.from('expenses').delete().eq('id', id);
-    }, [appData, updateRecordLocal]);
+    }, [updateRecordLocal]);
 
     const saveBook = useCallback(async (bookData, isEdit) => {
         const newId = isEdit ? bookData.id : generateId();
