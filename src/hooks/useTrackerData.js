@@ -272,14 +272,11 @@ export function useTrackerData(session) {
     }, [appData.records, appData.habits, last7Days]);
 
     const neglectedHabits = useMemo(() => {
-        const counts = {};
-        appData.habits.forEach(h => counts[h.id] = 0);
-        last7Days.forEach(d => {
-            const rec = appData.records[format(d, 'yyyy-MM-dd')];
-            if (rec && rec.habits) rec.habits.forEach(hId => { counts[hId] = counts[hId] ? counts[hId] + 1 : 1 });
-        });
-        return appData.habits.filter(h => counts[h.id] <= 1);
-    }, [appData.records, appData.habits, last7Days]);
+        const todayStr = format(today, 'yyyy-MM-dd');
+        const todayRecord = appData.records[todayStr];
+        const doneHabits = todayRecord?.habits || [];
+        return appData.habits.filter(h => !doneHabits.includes(h.id));
+    }, [appData.records, appData.habits, today]);
 
     const financialStats = useMemo(() => {
         let income = 0; let expense = 0; let totalDeepWork = 0;
