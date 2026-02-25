@@ -1,5 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <rect width="192" height="192" fill="#050507"/>
-  <text x="50%" y="50%" font-family="Outfit, sans-serif" font-size="80" font-weight="bold" fill="#6366f1" text-anchor="middle" dy=".3em">T</text>
-  <circle cx="96" cy="96" r="80" fill="none" stroke="#6366f1" stroke-width="8"/>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="#0c0c10" />
+  <rect x="26" y="26" width="140" height="140" rx="30" fill="url(#grad)" filter="url(#shadow)" />
+  <g transform="translate(48, 48)">
+    <path d="M48 20 L24 64 L40 64 L36 84 L64 48 L48 48 Z" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.3))"/>
+  </g>
 </svg>
